@@ -1,31 +1,38 @@
-# Définition des stages (étapes) du pipeline
 stages:
   - build
   - test
-  - deploy
+  - package
 
-# Job 1 : Compilation
-compile:
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository
+    - mon-app/target
+
+build_job:
   stage: build
   script:
-    - echo "🔨 Compilation en cours..."
-    - echo "✅ Build terminé avec succès"
-  # Ce job s'exécute sur un runner avec l'image par défaut
+    - cd mon-app
+    - mvn compile
 
-# Job 2 : Tests unitaires
-unit_tests:
+test_job:
   stage: test
   script:
-    - echo "🧪 Exécution des tests unitaires..."
-    - echo "✅ Tous les tests passent"
-  # On peut spécifier une image Docker si besoin
-  # image: node:18
+    - cd mon-app
+    - mvn test
+  artifacts:
+    reports:
+      junit: mon-app/target/surefire-reports/TEST-*.xml
+    when: always
 
-# Job 3 : Déploiement (uniquement sur la branche main)
-deploy_prod:
-  stage: deploy
+package_job:
+  stage: package
   script:
-    - echo "🚀 Déploiement vers la production..."
-    - echo "✅ Déploiement réussi"
-  only:
-    - main   # Ce job ne s'exécute que sur la branche "main"
+    - cd mon-app
+    - mvn package -DskipTests
+  artifacts:
+    paths:
+      - mon-app/target/*.jar
+    expire_in: 1 week
