@@ -55,6 +55,9 @@ deploy_job:
   script:
     - echo "🚀 Déploiement vers la production..."
     - echo "✅ Déploiement réussi"
+  environment:
+    name: production
+    url: http://localhost:8080
   only:
     - main
   when: manual
