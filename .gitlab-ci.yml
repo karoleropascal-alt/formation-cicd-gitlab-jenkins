@@ -14,6 +14,9 @@ cache:
 
 build_job:
   stage: build
+  image: maven:3.9-eclipse-temurin-17
+  tags:
+    - docker-runner
   script:
     - cd mon-app
     - mvn compile
@@ -61,3 +64,4 @@ deploy_job:
   only:
     - main
   when: manual
+
