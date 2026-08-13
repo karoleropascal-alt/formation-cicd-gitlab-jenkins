@@ -2,6 +2,7 @@ stages:
   - build
   - test
   - package
+  - deploy
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
@@ -19,6 +20,7 @@ build_job:
 
 test_job:
   stage: test
+  needs: ["build_job"]
   script:
     - cd mon-app
     - mvn test
@@ -27,8 +29,18 @@ test_job:
       junit: mon-app/target/surefire-reports/TEST-*.xml
     when: always
 
+lint_job:
+  stage: test
+  needs: ["build_job"]
+  script:
+    - cd mon-app
+    - echo "🔍 Vérification du style de code..."
+    - mvn compile -q
+    - echo "✅ Style OK"
+
 package_job:
   stage: package
+  needs: ["test_job", "lint_job"]
   script:
     - cd mon-app
     - mvn package -DskipTests
@@ -36,3 +48,13 @@ package_job:
     paths:
       - mon-app/target/*.jar
     expire_in: 1 week
+
+deploy_job:
+  stage: deploy
+  needs: ["package_job"]
+  script:
+    - echo "🚀 Déploiement vers la production..."
+    - echo "✅ Déploiement réussi"
+  only:
+    - main
+  when: manual
