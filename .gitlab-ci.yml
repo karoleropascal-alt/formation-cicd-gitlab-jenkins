@@ -1,0 +1,31 @@
+# Définition des stages (étapes) du pipeline
+stages:
+  - build
+  - test
+  - deploy
+
+# Job 1 : Compilation
+compile:
+  stage: build
+  script:
+    - echo "🔨 Compilation en cours..."
+    - echo "✅ Build terminé avec succès"
+  # Ce job s'exécute sur un runner avec l'image par défaut
+
+# Job 2 : Tests unitaires
+unit_tests:
+  stage: test
+  script:
+    - echo "🧪 Exécution des tests unitaires..."
+    - echo "✅ Tous les tests passent"
+  # On peut spécifier une image Docker si besoin
+  # image: node:18
+
+# Job 3 : Déploiement (uniquement sur la branche main)
+deploy_prod:
+  stage: deploy
+  script:
+    - echo "🚀 Déploiement vers la production..."
+    - echo "✅ Déploiement réussi"
+  only:
+    - main   # Ce job ne s'exécute que sur la branche "main"
