@@ -49,6 +49,17 @@ api_tests:
   artifacts:
     reports:
       junit: mon-app/target/surefire-reports/TEST-*.xml
+      
+newman_tests:
+  stage: api-test
+  image: postman/newman:alpine
+  script:
+    - newman run collection.json -e staging-env.json --reporters cli,junit --reporter-junit-export newman-report.xml
+  artifacts:
+    reports:
+      junit: newman-report.xml
+    paths:
+      - newman-report.xml
 
 lint_job:
   stage: test
@@ -82,4 +93,5 @@ deploy_job:
   only:
     - main
   when: manual
+
 

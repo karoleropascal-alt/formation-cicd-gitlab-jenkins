@@ -1,0 +1,102 @@
+{
+	"info": {
+		"name": "API Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"User id is 1\", function () {",
+							"    pm.expect(pm.response.json().id).to.eql(1);",
+							"});",
+							"",
+							"pm.test(\"User has a name\", function () {",
+							"    pm.expect(pm.response.json().name).to.not.be.null;",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"url": {
+					"raw": "{{base_url}}/users/1",
+					"host": ["{{base_url}}"],
+					"path": ["users", "1"]
+				}
+			}
+		},
+		{
+			"name": "Create Post",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Title matches\", function () {",
+							"    pm.expect(pm.response.json().title).to.eql(\"foo\");",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"foo\",\n    \"body\": \"bar\",\n    \"userId\": 1\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/posts",
+					"host": ["{{base_url}}"],
+					"path": ["posts"]
+				}
+			}
+		},
+		{
+			"name": "Get Non Existent User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"url": {
+					"raw": "{{base_url}}/users/9999",
+					"host": ["{{base_url}}"],
+					"path": ["users", "9999"]
+				}
+			}
+		}
+	]
+}
