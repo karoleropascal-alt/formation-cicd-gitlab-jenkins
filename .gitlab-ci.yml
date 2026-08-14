@@ -1,6 +1,7 @@
 stages:
   - build
   - test
+  - api-test
   - package
   - deploy
 
@@ -37,6 +38,17 @@ test_job:
         path: mon-app/target/site/jacoco/jacoco.xml
     paths:
       - mon-app/target/site/jacoco/
+      
+api_tests:
+  stage: api-test
+  image: maven:3.9-eclipse-temurin-17
+  needs: ["test_job"]
+  script:
+    - cd mon-app
+    - mvn test -Dtest=UserApiTest
+  artifacts:
+    reports:
+      junit: mon-app/target/surefire-reports/TEST-*.xml
 
 lint_job:
   stage: test
@@ -70,3 +82,4 @@ deploy_job:
   only:
     - main
   when: manual
+
