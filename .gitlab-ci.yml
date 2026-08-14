@@ -1,9 +1,9 @@
 stages:
   - build
   - test
-  - api-test
   - package
-  - deploy
+  - deploy-staging
+  - api-test
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
@@ -22,9 +22,20 @@ build_job:
     - cd mon-app
     - mvn compile
 
-test_job:
+unit_tests:
   stage: test
   image: maven:3.9-eclipse-temurin-17
+  script:
+    - cd mon-app
+    - mvn test
+  artifacts:
+    reports:
+      junit: mon-app/target/surefire-reports/TEST-*.xml
+
+coverage:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  needs: ["unit_tests"]
   script:
     - cd mon-app
     - mvn test jacoco:report
@@ -32,34 +43,11 @@ test_job:
   coverage: '/Total.*?([0-9]{1,3})\s*%/'
   artifacts:
     reports:
-      junit: mon-app/target/surefire-reports/TEST-*.xml
       coverage_report:
         coverage_format: jacoco
         path: mon-app/target/site/jacoco/jacoco.xml
     paths:
       - mon-app/target/site/jacoco/
-      
-api_tests:
-  stage: api-test
-  image: maven:3.9-eclipse-temurin-17
-  needs: ["test_job"]
-  script:
-    - cd mon-app
-    - mvn test -Dtest=UserApiTest
-  artifacts:
-    reports:
-      junit: mon-app/target/surefire-reports/TEST-*.xml
-      
-newman_tests:
-  stage: api-test
-  image: postman/newman:alpine
-  script:
-    - newman run collection.json -e staging-env.json --reporters cli,junit --reporter-junit-export newman-report.xml
-  artifacts:
-    reports:
-      junit: newman-report.xml
-    paths:
-      - newman-report.xml
 
 lint_job:
   stage: test
@@ -70,9 +58,20 @@ lint_job:
     - mvn compile -q
     - echo "✅ Style OK"
 
+api_tests:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  needs: ["unit_tests"]
+  script:
+    - cd mon-app
+    - mvn test -Dtest=UserApiTest
+  artifacts:
+    reports:
+      junit: mon-app/target/surefire-reports/TEST-*.xml
+
 package_job:
   stage: package
-  needs: ["test_job", "lint_job"]
+  needs: ["unit_tests", "coverage", "lint_job"]
   script:
     - cd mon-app
     - mvn package -DskipTests
@@ -81,17 +80,22 @@ package_job:
       - mon-app/target/*.jar
     expire_in: 1 week
 
-deploy_job:
-  stage: deploy
+deploy_staging:
+  stage: deploy-staging
   needs: ["package_job"]
   script:
-    - echo "🚀 Déploiement vers la production..."
-    - echo "✅ Déploiement réussi"
+    - echo "🚀 Déploiement vers staging..."
+    - echo "✅ Déploiement staging réussi"
   environment:
-    name: production
+    name: staging
     url: http://localhost:8080
-  only:
-    - main
-  when: manual
 
-
+smoke_api:
+  stage: api-test
+  image: postman/newman:alpine
+  needs: ["deploy_staging"]
+  script:
+    - newman run collection.json -e staging-env.json --reporters cli,junit --reporter-junit-export newman-report.xml
+  artifacts:
+    reports:
+      junit: newman-report.xml
