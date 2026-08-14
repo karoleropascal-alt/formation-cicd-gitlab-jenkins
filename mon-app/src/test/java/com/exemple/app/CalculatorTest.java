@@ -14,7 +14,7 @@ class CalculatorTest {
 
     @Test
     void shouldAddTwoNumbers() {
-       assertEquals(999, calculator.add(2, 3));  // volontairement faux
+        assertEquals(5, calculator.add(2, 3));  // valeur correcte restaurée
     }
 
     @Test
